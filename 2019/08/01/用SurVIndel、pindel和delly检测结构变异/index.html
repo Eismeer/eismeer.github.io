@@ -34,7 +34,7 @@
 <li>对结果文件进行处理，选取目标变异类型（此次处理目标为DEL和INS），将其结果文件转换为可更加清晰读取、分析的.vcf格式；</li>
 <li>对结果进行过滤、整合。</li>
 </ol>
-<h6 id="SurVIndel检测结构变异"><a href="#SurVIndel检测结构变异" class="headerlink" title="SurVIndel检测结构变异"></a>SurVIndel检测结构变异</h6><ol>
+<h5 id="SurVIndel检测结构变异"><a href="#SurVIndel检测结构变异" class="headerlink" title="SurVIndel检测结构变异"></a>SurVIndel检测结构变异</h5><ol>
 <li><p>在本次实验的对应根目录下进行基本准备工作：</p>
 <pre class=" language-bash"><code class="language-bash"><span class="token function">mkdir</span> SurVIndel_result
 <span class="token function">cd</span> SurVIndel_result/</code></pre>
@@ -70,6 +70,60 @@ python2 surveyor.py <span class="token variable">$bam</span> <span class="token 
 <li><p>退出vi后：</p>
 <pre class=" language-bash"><code class="language-bash"><span class="token function">chmod</span> +x run_SurVIndel.sh
 <span class="token function">source</span> run_SurVIndel.sh</code></pre>
+</li>
+</ol>
+<h5 id="pindel检测结构变异"><a href="#pindel检测结构变异" class="headerlink" title="pindel检测结构变异"></a>pindel检测结构变异</h5><ol>
+<li><p>在本次实验的对应根目录下进行基本准备工作：</p>
+<pre class=" language-bash"><code class="language-bash"><span class="token function">mkdir</span> pindel_result
+<span class="token function">cd</span> pindel_result/</code></pre>
+</li>
+<li><p>使用vi编写对应的脚本文件存于./run_pindel.sh：</p>
+<pre class=" language-bash"><code class="language-bash"><span class="token shebang important">#!/bin/bash</span>
+wk<span class="token operator">=</span><span class="token variable">$PWD</span>
+ref<span class="token operator">=</span><span class="token string">"/path-to-reference-genome/Arabidopsis_thaliana.TAIR10.dna.toplevel.modified.fa"</span>
+<span class="token function">mkdir</span> -p <span class="token variable">$wk</span>/result <span class="token operator">&amp;&amp;</span> <span class="token function">mkdir</span> -p <span class="token variable">$wk</span>/log <span class="token operator">&amp;&amp;</span> <span class="token function">mkdir</span> -p <span class="token variable">$wk</span>/config <span class="token operator">&amp;&amp;</span> <span class="token function">mkdir</span> -p <span class="token variable">$wk</span>/vcf_format
+<span class="token function">cat</span> <span class="token variable">$wk</span>/<span class="token punctuation">..</span>/sweden_list <span class="token operator">|</span> <span class="token keyword">while</span> <span class="token function">read</span> i<span class="token punctuation">;</span><span class="token keyword">do</span>
+<span class="token function">cd</span> <span class="token variable">$wk</span>
+<span class="token function">mkdir</span> -p <span class="token variable">$wk</span>/result/<span class="token variable">$i</span>
+bsub -J <span class="token variable">${i}</span>.pindel -n 4 -o <span class="token variable">$wk</span>/log/<span class="token variable">${i}</span>.out -e <span class="token variable">$wk</span>/log/<span class="token variable">${i}</span>.err -q <span class="token string">"normal q2680v2"</span> -R span<span class="token punctuation">[</span>hosts<span class="token operator">=</span>1<span class="token punctuation">]</span> \
+<span class="token string">"
+touch <span class="token variable">$wk</span>/config/<span class="token variable">${i}</span>_conf.txt
+echo /path-to-SRR.bam-data/<span class="token variable">${i}</span>.fix-sorted.bam 200 <span class="token variable">$i</span> > <span class="token variable">$wk</span>/config/<span class="token variable">${i}</span>_conf.txt
+pindel -f <span class="token variable">$ref</span> -i <span class="token variable">$wk</span>/config/<span class="token variable">${i}</span>_conf.txt -T 4 -c ALL -o <span class="token variable">$wk</span>/pin_result/<span class="token variable">$i</span>/<span class="token variable">$i</span>
+pindel2vcf -p $/wk/result/<span class="token variable">$i</span>/<span class="token variable">${i}</span>_D -r <span class="token variable">$ref</span> -R Arabidopsis_thaliana.TAIR10 -d 20190728 -v <span class="token variable">$wk</span>/vcf_format/<span class="token variable">${i}</span>.pin_DEL.vcf
+pindel2vcf -p $/wk/result/<span class="token variable">$i</span>/<span class="token variable">${i}</span>_SI -r <span class="token variable">$ref</span> -R Arabidopsis_thaliana.TAIR10 -d 20190728 -v <span class="token variable">$wk</span>/vcf_format/<span class="token variable">${i}</span>.pin_SI.vcf
+pindel2vcf -p $/wk/result/<span class="token variable">$i</span>/<span class="token variable">${i}</span>_LI -r <span class="token variable">$ref</span> -R Arabidopsis_thaliana.TAIR10 -d 20190728 -v <span class="token variable">$wk</span>/vcf_format/<span class="token variable">${i}</span>.pin_LI.vcf
+"</span>
+<span class="token keyword">done</span></code></pre>
+</li>
+<li><p>退出vi后：</p>
+<pre class=" language-bash"><code class="language-bash"><span class="token function">chmod</span> +x run_pindel.sh
+<span class="token function">source</span> run_pindel.sh</code></pre>
+</li>
+</ol>
+<h5 id="delly检测结构变异"><a href="#delly检测结构变异" class="headerlink" title="delly检测结构变异"></a>delly检测结构变异</h5><ol>
+<li><p>在本次实验的对应根目录下进行基本准备工作：</p>
+<pre class=" language-bash"><code class="language-bash"><span class="token function">mkdir</span> delly_result
+<span class="token function">cd</span> delly_result/</code></pre>
+</li>
+<li><p>使用vi编写对应的脚本文件存于./run_delly.sh：</p>
+<pre class=" language-bash"><code class="language-bash"><span class="token shebang important">#!/bin/bash</span>
+wk<span class="token operator">=</span><span class="token variable">$PWD</span>
+ref<span class="token operator">=</span><span class="token string">"/path-to-reference-genome/Arabidopsis_thaliana.TAIR10.dna.toplevel.modified.fa"</span>
+<span class="token function">mkdir</span> -p <span class="token variable">$wk</span>/result <span class="token operator">&amp;&amp;</span> <span class="token function">mkdir</span> -p <span class="token variable">$wk</span>/log
+<span class="token function">cat</span> <span class="token punctuation">..</span>/sweden_list <span class="token operator">|</span> <span class="token keyword">while</span> <span class="token function">read</span> i<span class="token punctuation">;</span><span class="token keyword">do</span>
+<span class="token function">cd</span> <span class="token variable">$wk</span>
+bam<span class="token operator">=</span><span class="token string">"/path-to-SRR.bam-data/<span class="token variable">${i}</span>.fix-sorted.bam"</span>
+bsub -J <span class="token variable">${i}</span>.delly -n 4  -o <span class="token variable">$wk</span>/log/<span class="token variable">${i}</span>.out -e <span class="token variable">$wk</span>/log/<span class="token variable">${i}</span>.err -q <span class="token string">"normal q2680v2"</span> -R span<span class="token punctuation">[</span>hosts<span class="token operator">=</span>1<span class="token punctuation">]</span> \
+<span class="token string">"
+delly call -o <span class="token variable">$wk</span>/result/<span class="token variable">${i}</span>.bcf -g <span class="token variable">$ref</span> <span class="token variable">$bam</span>
+bcftools view <span class="token variable">$wk</span>/result/<span class="token variable">${i}</span>.bcf > <span class="token variable">$wk</span>/result/<span class="token variable">${i}</span>.delly.vcf
+"</span>
+<span class="token keyword">done</span></code></pre>
+</li>
+<li><p>退出vi后：</p>
+<pre class=" language-bash"><code class="language-bash"><span class="token function">chmod</span> +x run_delly.sh
+<span class="token function">source</span> run_delly.sh</code></pre>
 </li>
 </ol>
 </article><br><br><br><br><br></main></body></html>
