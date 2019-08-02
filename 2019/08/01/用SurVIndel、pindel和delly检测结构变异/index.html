@@ -8,7 +8,7 @@
 <li>参考基因组：拟南芥，实验室取得，格式经过部分调整，文件名Arabidopsis_thaliana.TAIR10.dna.toplevel.modified.fa</li>
 <li>待测样品：Sweden Arabidopsis thaliana 01种系，共220个样本，实验室取得，包含.bam和对应的.bai数据，SRR编号存放于sweden_list文件中，用head命令查看如下：</li>
 </ul>
-<pre class=" language-shell"><code class="language-shell">$ head sweden_list
+<pre class=" language-bash"><code class="language-bash">$ <span class="token function">head</span> sweden_list
 
     SRR1945487
     SRR1945488
@@ -36,40 +36,40 @@
 </ol>
 <h6 id="SurVIndel检测结构变异"><a href="#SurVIndel检测结构变异" class="headerlink" title="SurVIndel检测结构变异"></a>SurVIndel检测结构变异</h6><ol>
 <li><p>在本次实验的对应根目录下进行基本准备工作：</p>
-<pre class=" language-shell"><code class="language-shell">mkdir SurVIndel_result
-cd SurVIndel_result/</code></pre>
+<pre class=" language-bash"><code class="language-bash"><span class="token function">mkdir</span> SurVIndel_result
+<span class="token function">cd</span> SurVIndel_result/</code></pre>
 </li>
 <li><p>根据github上的提示，制作简单重复序列文件（我选择了使用TRF制作）：</p>
-<pre class=" language-shell"><code class="language-shell">wget http://tandem.bu.edu/trf/downloads/trf409.linux64
-mv trf409.linux64 trf.sh
+<pre class=" language-bash"><code class="language-bash"><span class="token function">wget</span> http://tandem.bu.edu/trf/downloads/trf409.linux64
+<span class="token function">mv</span> trf409.linux64 trf.sh
 ./trf.sh /path-to-reference-genome/Arabidopsis_thaliana.TAIR10.dna.toplevel.modified.fa/ 2 5 7 80 10 50 2000 -d -h
-cat Arabidopsis_thaliana.TAIR10.dna.toplevel.modified.fa.2.5.7.80.10.50.2000.dat | /path-to-SurVIndel/trf-to-bed.sh > ./file-for-survindel.bed
-rm *.dat *.sh</code></pre>
+<span class="token function">cat</span> Arabidopsis_thaliana.TAIR10.dna.toplevel.modified.fa.2.5.7.80.10.50.2000.dat <span class="token operator">|</span> /path-to-SurVIndel/trf-to-bed.sh <span class="token operator">></span> ./file-for-survindel.bed
+<span class="token function">rm</span> *.dat *.sh</code></pre>
 <p>参数说明：运行trf.sh时，-d输出data file（.dat文件），-h避免输出.html文件，数字设置详见<a href="https://tandem.bu.edu/trf/trf.unix.help.html" target="_blank" rel="noopener">TRF网站上的manual page</a>.</p>
 </li>
 <li><p>使用vi编写对应的脚本文件存于./run_SurVIndel.sh：</p>
-<pre class=" language-shell"><code class="language-shell">#!/bin/bash
-wk=$PWD
-ref="/path-to-reference-genome/Arabidopsis_thaliana.TAIR10.dna.toplevel.modified.fa"
-samtools="/path-to-samtools/samtools"
-bwa=`which bwa`
-repeat_file="$wk/file-for-survindel.bed"
-mkdir -p $wk/result && mkdir -p $wk/log
-cat $wk/../sweden_list | while read i;do
-bam="/path-to-SRR.bam-data/01.sweden.bam/${i}.fix-sorted.bam"
-mkdir -p $wk/result/$i
-cd $wk
-bsub -J ${i}.SurVIndel -n 2 -o $wk/log/${i}.out -e $wk/log/${i}.err -q "normal q2680v2" -R span[hosts=1] \
-"
+<pre class=" language-bash"><code class="language-bash"><span class="token shebang important">#!/bin/bash</span>
+wk<span class="token operator">=</span><span class="token variable">$PWD</span>
+ref<span class="token operator">=</span><span class="token string">"/path-to-reference-genome/Arabidopsis_thaliana.TAIR10.dna.toplevel.modified.fa"</span>
+samtools<span class="token operator">=</span><span class="token string">"/path-to-samtools/samtools"</span>
+bwa<span class="token operator">=</span><span class="token variable"><span class="token variable">`</span><span class="token function">which</span> bwa<span class="token variable">`</span></span>
+repeat_file<span class="token operator">=</span><span class="token string">"<span class="token variable">$wk</span>/file-for-survindel.bed"</span>
+<span class="token function">mkdir</span> -p <span class="token variable">$wk</span>/result <span class="token operator">&amp;&amp;</span> <span class="token function">mkdir</span> -p <span class="token variable">$wk</span>/log
+<span class="token function">cat</span> <span class="token variable">$wk</span>/<span class="token punctuation">..</span>/sweden_list <span class="token operator">|</span> <span class="token keyword">while</span> <span class="token function">read</span> i<span class="token punctuation">;</span><span class="token keyword">do</span>
+bam<span class="token operator">=</span><span class="token string">"/path-to-SRR.bam-data/01.sweden.bam/<span class="token variable">${i}</span>.fix-sorted.bam"</span>
+<span class="token function">mkdir</span> -p <span class="token variable">$wk</span>/result/<span class="token variable">$i</span>
+<span class="token function">cd</span> <span class="token variable">$wk</span>
+bsub -J <span class="token variable">${i}</span>.SurVIndel -n 2 -o <span class="token variable">$wk</span>/log/<span class="token variable">${i}</span>.out -e <span class="token variable">$wk</span>/log/<span class="token variable">${i}</span>.err -q <span class="token string">"normal q2680v2"</span> -R span<span class="token punctuation">[</span>hosts<span class="token operator">=</span>1<span class="token punctuation">]</span> \
+<span class="token string">"
 cd /path-to-SurVIndel/SurVIndel-master/
-python2 surveyor.py $bam $wk/result/$i $ref --threads 2 --samtools $samtools --bwa $bwa --simple-rep $repeat_file --sampleClips
-./filter $wk/result/$i 0.01 0.33 1 $repeat_file > $wk/result/${i}.result.txt
-"
-done</code></pre>
+python2 surveyor.py <span class="token variable">$bam</span> <span class="token variable">$wk</span>/result/<span class="token variable">$i</span> <span class="token variable">$ref</span> --threads 2 --samtools <span class="token variable">$samtools</span> --bwa <span class="token variable">$bwa</span> --simple-rep <span class="token variable">$repeat_file</span> --sampleClips
+./filter <span class="token variable">$wk</span>/result/<span class="token variable">$i</span> 0.01 0.33 1 <span class="token variable">$repeat_file</span> > <span class="token variable">$wk</span>/result/<span class="token variable">${i}</span>.result.txt
+"</span>
+<span class="token keyword">done</span></code></pre>
 </li>
 <li><p>退出vi后：</p>
-<pre class=" language-shell"><code class="language-shell">chmod +x run_SurVIndel.sh
-source run_SurVIndel.sh</code></pre>
+<pre class=" language-bash"><code class="language-bash"><span class="token function">chmod</span> +x run_SurVIndel.sh
+<span class="token function">source</span> run_SurVIndel.sh</code></pre>
 </li>
 </ol>
 </article><br><br><br><br><br></main></body></html>
