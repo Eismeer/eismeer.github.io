@@ -1,0 +1,75 @@
+<!DOCTYPE html><html lang="en-us"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><title>用SurVIndel、pindel和delly检测结构变异 | Icy's Bioinformatics Notes</title><meta name="description"><meta name="generator" content="Icy's Bioinformatics Notes"><meta name="author" content="Icy"><meta name="keywords"><meta name="HandheldFriendly" content="True"><meta name="MobileOptimized" content="320"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=0"><link rel="stylesheet" type="text/css" href="/styles/screen.css"><link rel="apple-touch-icon" sizes="57x57" href="/images/apple-touch-icon-57x57.png"><link rel="apple-touch-icon" sizes="60x60" href="/images/apple-touch-icon-60x60.png"><link rel="apple-touch-icon" sizes="72x72" href="/images/apple-touch-icon-72x72.png"><link rel="apple-touch-icon" sizes="76x76" href="/images/apple-touch-icon-76x76.png"><link rel="apple-touch-icon" sizes="114x114" href="/images/apple-touch-icon-114x114.png"><link rel="apple-touch-icon" sizes="120x120" href="/images/apple-touch-icon-120x120.png"><link rel="apple-touch-icon" sizes="144x144" href="/images/apple-touch-icon-144x144.png"><link rel="apple-touch-icon" sizes="152x152" href="/images/apple-touch-icon-152x152.png"><link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-180x180.png"><link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png"><link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png"><link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png"><link rel="icon" type="image/png" sizes="128x128" href="/images/favicon-128.png"><link rel="icon" type="image/png" sizes="196x196" href="/images/favicon-196x196.png"><meta name="msapplication-TileColor" content="#FFFFFF"><meta name="msapplication-TileImage" content="mstile-144x144.png"><meta name="msapplication-square70x70logo" content="mstile-70x70.png"><meta name="msapplication-square150x150logo" content="mstile-150x150.png"><meta name="msapplication-wide310x150logo" content="mstile-310x150.png"><meta name="msapplication-square310x310logo" content="mstile-310x310.png"><link rel="stylesheet" href="/css/prism.css" type="text/css"></head><body itemscope itemtype="https://schema.org/WebPage"><header itemscope itemtype="https://schema.org/WPHeader"><div class="logo"></div><h1><a href="/" alt="Icy's Bioinformatics Notes" title="Icy's Bioinformatics Notes" itemprop="headline">Icy's Bioinformatics Notes</a></h1><p itemprop="description"></p><nav itemscope itemtype="https://schema.org/SiteNavigationElement"><ul><li itemprop="name"><a href="/ " alt="home" title="home" itemprop="url">home</a></li><li itemprop="name"><a href="/articles" alt="articles" title="articles" itemprop="url">articles</a></li><li itemprop="name"><a href="/author" alt="author" title="author" itemprop="url">author</a></li></ul></nav><div class="space"></div></header><main itemscope itemtype="https://schema.org/Blog"><article class="full"><h1 itemprop="headline" class="post-heading">用SurVIndel、pindel和delly检测结构变异</h1><span class="page-tag-anchor"><a href="/tags/bioinformatics" itemprop="url">#bioinformatics
+&nbsp;&nbsp;</a></span><span class="page-tag-anchor"><a href="/tags/notes" itemprop="url">#notes
+&nbsp;&nbsp;</a></span><span class="page-tag-anchor"><a href="/tags/structural variation" itemprop="url">#structural variation
+&nbsp;&nbsp;</a></span><span class="post-meta"></span><br><br><h3 id="材料"><a href="#材料" class="headerlink" title="材料"></a>材料</h3><ul>
+<li><strong>数据来源</strong></li>
+</ul>
+<ul>
+<li>参考基因组：拟南芥，实验室取得，格式经过部分调整，文件名Arabidopsis_thaliana.TAIR10.dna.toplevel.modified.fa</li>
+<li>待测样品：Sweden Arabidopsis thaliana 01种系，共220个样本，实验室取得，包含.bam和对应的.bai数据，SRR编号存放于sweden_list文件中，用head命令查看如下：</li>
+</ul>
+<pre class=" language-shell"><code class="language-shell">$ head sweden_list
+
+    SRR1945487
+    SRR1945488
+    SRR1945489
+    SRR1945492
+    SRR1945591
+    SRR1945592
+    SRR1945604
+    SRR1945605
+    SRR1945606
+    SRR1945607</code></pre>
+<ul>
+<li><strong>软件来源：</strong> github（已加入超链接，可点击以下名称跳转查看）</li>
+</ul>
+<ul>
+<li><a href="https://github.com/Mesh89/SurVIndel" target="_blank" rel="noopener">SurVIndel</a><pre><code>  注：因使用到 pysam包，需用 python 2运行survoyer.py</code></pre></li>
+<li><a href="https://github.com/genome/pindel" target="_blank" rel="noopener">pindel</a></li>
+<li><a href="https://github.com/dellytools/delly" target="_blank" rel="noopener">delly</a></li>
+</ul>
+<h3 id="流程"><a href="#流程" class="headerlink" title="流程"></a>流程</h3><ol>
+<li>根据三种软件的github README.md进行软件安装（代码略）；</li>
+<li>编写可以提交给LSF集群系统的三种脚本，通过循环提交作业的方式使用多核加快数据处理速度；</li>
+<li>对结果文件进行处理，选取目标变异类型（此次处理目标为DEL和INS），将其结果文件转换为可更加清晰读取、分析的.vcf格式；</li>
+<li>对结果进行过滤、整合。</li>
+</ol>
+<h6 id="SurVIndel检测结构变异"><a href="#SurVIndel检测结构变异" class="headerlink" title="SurVIndel检测结构变异"></a>SurVIndel检测结构变异</h6><ol>
+<li><p>在本次实验的对应根目录下进行基本准备工作：</p>
+<pre class=" language-shell"><code class="language-shell">mkdir SurVIndel_result
+cd SurVIndel_result/</code></pre>
+</li>
+<li><p>根据github上的提示，制作简单重复序列文件（我选择了使用TRF制作）：</p>
+<pre class=" language-shell"><code class="language-shell">wget http://tandem.bu.edu/trf/downloads/trf409.linux64
+mv trf409.linux64 trf.sh
+./trf.sh /path-to-reference-genome/Arabidopsis_thaliana.TAIR10.dna.toplevel.modified.fa/ 2 5 7 80 10 50 2000 -d -h
+cat Arabidopsis_thaliana.TAIR10.dna.toplevel.modified.fa.2.5.7.80.10.50.2000.dat | /path-to-SurVIndel/trf-to-bed.sh > ./file-for-survindel.bed
+rm *.dat *.sh</code></pre>
+<p>参数说明：运行trf.sh时，-d输出data file（.dat文件），-h避免输出.html文件，数字设置详见<a href="https://tandem.bu.edu/trf/trf.unix.help.html" target="_blank" rel="noopener">TRF网站上的manual page</a>.</p>
+</li>
+<li><p>使用vi编写对应的脚本文件存于./run_SurVIndel.sh：</p>
+<pre class=" language-shell"><code class="language-shell">#!/bin/bash
+wk=$PWD
+ref="/path-to-reference-genome/Arabidopsis_thaliana.TAIR10.dna.toplevel.modified.fa"
+samtools="/path-to-samtools/samtools"
+bwa=`which bwa`
+repeat_file="$wk/file-for-survindel.bed"
+mkdir -p $wk/result && mkdir -p $wk/log
+cat $wk/../sweden_list | while read i;do
+bam="/path-to-SRR.bam-data/01.sweden.bam/${i}.fix-sorted.bam"
+mkdir -p $wk/result/$i
+cd $wk
+bsub -J ${i}.SurVIndel -n 2 -o $wk/log/${i}.out -e $wk/log/${i}.err -q "normal q2680v2" -R span[hosts=1] \
+"
+cd /path-to-SurVIndel/SurVIndel-master/
+python2 surveyor.py $bam $wk/result/$i $ref --threads 2 --samtools $samtools --bwa $bwa --simple-rep $repeat_file --sampleClips
+./filter $wk/result/$i 0.01 0.33 1 $repeat_file > $wk/result/${i}.result.txt
+"
+done</code></pre>
+</li>
+<li><p>退出vi后：</p>
+<pre class=" language-shell"><code class="language-shell">chmod +x run_SurVIndel.sh
+source run_SurVIndel.sh</code></pre>
+</li>
+</ol>
+</article><br><br><br><br><br></main></body></html>
